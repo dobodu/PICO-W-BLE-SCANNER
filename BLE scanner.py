@@ -29,14 +29,11 @@ _ADV_SCAN_RESP = 0x04
 def decode_services(payload):
     services = []
     for u in decode_field(payload, _ADV_TYPE_UUID16_COMPLETE):
-        print("UID16")
         services.append(bluetooth.UUID(struct.unpack("<h", u)[0]))
     for u in decode_field(payload, _ADV_TYPE_UUID32_COMPLETE):
         services.append(bluetooth.UUID(struct.unpack("<d", u)[0]))
-        print("UID32")
     for u in decode_field(payload, _ADV_TYPE_UUID128_COMPLETE):
         services.append(bluetooth.UUID(u))
-        print("UID128")
     return services
 
 def decode_field(payload, adv_type):
@@ -62,7 +59,7 @@ def irq_handler(irq_ble, data_ble):
         existing_dev = [index for index, row in enumerate(devices) if mac in row]
         if adv_type in (_ADV_IND, _ADV_DIRECT_IND): 
             if existing_dev == []:
-                devices.append([mac, decode_services(data), "", signal, add_type])
+                devices.append([mac, decode_services(data), "", signal])
         elif adv_type == _ADV_SCAN_RESP:
             if existing_dev != []:
                 devices[existing_dev[0]][2] = decode_name(data)
