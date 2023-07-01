@@ -1,4 +1,5 @@
 import time, bluetooth, struct
+from machine import Pin
 
 devices = []      
 
@@ -19,7 +20,12 @@ _ADV_TYPE_SIMPLE_PAIRING_HASH = const(0x0E)
 _ADV_TYPE_SIMPLE_PAIRING_RANDOM = const(0x0F)
 _ADV_TYPE_APPEARANCE = const(0x19)
 
+#Bluetooth Event Codes
+
+_IRQ_SCAN_RESULT = const(5)
+
 #Bluetooth IRQ SCAN RESULT ADV TYPE
+
 _ADV_IND = 0x00
 _ADV_DIRECT_IND = 0x01
 _ADV_SCAN_IND = 0x02
@@ -53,7 +59,7 @@ def decode_mac(payload):
     return payload[-6:].hex(":").upper()
 
 def irq_handler(irq_ble, data_ble):
-    if irq_ble == 5:
+    if irq_ble == _IRQ_SCAN_RESULT:
         add_type,  addr, adv_type, signal, data = data_ble
         mac = decode_mac(addr)
         existing_dev = [index for index, row in enumerate(devices) if mac in row]
@@ -68,5 +74,10 @@ ble = bluetooth.BLE()
 ble.irq(irq_handler)
 ble.active(True)
 ble.gap_scan(1000, 6250, 6250, True)
-time.sleep_ms(2000)
+led = Pin('LED', Pin.OUT)
+start_time = time.ticks_ms()
+while time.ticks_diff(time.ticks_ms(), start_time) < 2000:
+    led.toggle()
+    time.sleep_ms(200)
+print("Found",len(devices),"devices")
 print(devices)
